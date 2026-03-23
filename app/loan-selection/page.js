@@ -1,8 +1,9 @@
 "use client";
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function LoanSelection() {
+// 1. This is the actual page content
+function LoanContent() {
   const searchParams = useSearchParams();
   const name = searchParams.get('name') || "Customer";
   const [selected, setSelected] = useState(null);
@@ -36,28 +37,36 @@ export default function LoanSelection() {
         {options.map((opt, i) => (
           <div key={i} onClick={() => setSelected(i)} className={`p-4 border-2 rounded-xl cursor-pointer transition ${selected === i ? 'border-green-600 bg-green-50' : 'border-gray-100 hover:bg-gray-50'}`}>
             <p className="text-green-600 font-bold text-lg">{opt.amount}</p>
-            <p className="text-sm text-gray-400 font-medium font-mono uppercase">Processing Fee: Ksh {opt.fee}</p>
+            <p className="text-sm text-gray-400 font-medium font-mono uppercase">Fee: Ksh {opt.fee}</p>
           </div>
         ))}
 
         <button onClick={handleApply} disabled={selected === null || loading} className={`w-full py-4 rounded-xl font-bold text-white transition mt-4 ${selected === null ? 'bg-green-300' : 'bg-green-600 hover:bg-green-700 shadow-lg'}`}>
-          {loading ? "Processing Selection..." : "Apply Now"}
+          {loading ? "Processing..." : "Apply Now"}
         </button>
       </div>
 
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-xs w-full shadow-2xl">
-            <h2 className="text-2xl font-bold mb-3 text-gray-800">Confirm Selection</h2>
+          <div className="bg-white rounded-2xl p-8 max-w-xs w-full shadow-2xl text-center">
+            <h2 className="text-2xl font-bold mb-3 text-gray-800">Confirm</h2>
             <p className="text-gray-600">Proceed with <span className="text-green-600 font-bold">{options[selected].amount}</span></p>
-            <p className="text-sm text-gray-500 mt-4 bg-gray-100 p-2 rounded">M-Pesa prompt will be sent shortly.</p>
             <div className="mt-8 flex justify-end space-x-4">
-              <button onClick={() => setShowModal(false)} className="text-gray-400 font-bold uppercase text-xs tracking-widest">Cancel</button>
-              <button onClick={() => alert("Processing request...")} className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold shadow-md">Proceed</button>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 font-bold uppercase text-xs">Cancel</button>
+              <button onClick={() => alert("Processing request...")} className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">Proceed</button>
             </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+// 2. This is the wrapper that fixes the "Prerendering" error
+export default function LoanSelection() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">Loading selection...</div>}>
+      <LoanContent />
+    </Suspense>
   );
 }
